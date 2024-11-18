@@ -29,6 +29,13 @@ string BASEDIR = "static";
 string SCHEDALG = "FIFO";
 string LOGFILE = "/dev/null";
 
+// mutex as well as some conditional variables and deque for sockets
+// Deque for FIFO order
+pthread_mutex_t Thread_Mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t producer_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t consumer_cond = PTHREAD_COND_INITIALIZER;
+std::deque<MySocket *> socket_deque;
+
 vector<HttpService *> services;
 
 HttpService *find_service(HTTPRequest *request) {
@@ -42,7 +49,6 @@ HttpService *find_service(HTTPRequest *request) {
   return NULL;
 }
 
-
 void invoke_service_method(HttpService *service, HTTPRequest *request, HTTPResponse *response) {
   stringstream payload;
 
@@ -54,9 +60,10 @@ void invoke_service_method(HttpService *service, HTTPRequest *request, HTTPRespo
     service->head(request, response);
   } else if (request->isGet()) {
     service->get(request, response);
-  } else {
+  } 
+  else {
     // The server doesn't know about this method
-    response->setStatus(501);
+    response->setStatus(405);
   }
 }
 
@@ -91,7 +98,7 @@ void handle_request(MySocket *client) {
   payload.str(""); payload.clear();
   payload << " RESPONSE " << response->getStatus() << " client: " << (void *) client;
   sync_print("write_response", payload.str());
-  cout << payload.str() << endl;
+  cout << payload.str() << std::endl;
   client->write(response->response());
     
   delete response;
@@ -102,6 +109,41 @@ void handle_request(MySocket *client) {
   sync_print("close_connection", payload.str());
   client->close();
   delete client;
+}
+
+// Inspired by coke producer/consumer example with two conditionals (producer_consumer.cpp)
+// Wrapped in `while (true)` because we have to keep taking requests
+// Also a bit analogous to the threadHandler function in `pthread_cat.cpp`
+void *consumer(void * arg) {
+  while (true) {
+    dthread_mutex_lock(&Thread_Mutex);
+    while (!socket_deque.size()) {
+      dthread_cond_wait(&producer_cond, &Thread_Mutex);
+    }
+    MySocket *req = socket_deque.front();
+    socket_deque.pop_front();
+    dthread_cond_signal(&consumer_cond);
+    dthread_mutex_unlock(&Thread_Mutex);
+    handle_request(req);
+  }
+}
+
+// Inspired by coke producer/consumer example with two conditionals (producer_consumer.cpp)
+// Again, wrapped in `while (true)` to continuously take requests
+void producer(MyServerSocket * server) {
+  while (true) {
+    sync_print("waiting_to_accept", "");
+    MySocket *client = server->accept();
+    sync_print("client_accepted", "");
+    dthread_mutex_lock(&Thread_Mutex);
+    // int size = socket_deque.size();
+    while (static_cast<int>(socket_deque.size()) >= BUFFER_SIZE) {
+      dthread_cond_wait(&consumer_cond, &Thread_Mutex);
+    }
+    socket_deque.push_back(client);
+    dthread_cond_signal(&producer_cond);
+    dthread_mutex_unlock(&Thread_Mutex);
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -139,16 +181,16 @@ int main(int argc, char *argv[]) {
 
   sync_print("init", "");
   MyServerSocket *server = new MyServerSocket(PORT);
-  MySocket *client;
+  pthread_t thread_list[THREAD_POOL_SIZE];
+  
+  // Start creating the pool
+  for (int i = 0; i < THREAD_POOL_SIZE; i++) {
+    dthread_create(&thread_list[i], NULL, consumer, NULL);
+  }
 
   // The order that you push services dictates the search order
   // for path prefix matching
   services.push_back(new FileService(BASEDIR));
+  producer(server);
   
-  while(true) {
-    sync_print("waiting_to_accept", "");
-    client = server->accept();
-    sync_print("client_accepted", "");
-    handle_request(client);
-  }
 }
