@@ -80,9 +80,10 @@ class LocalFileSystem {
    *
    * Success: return the inode number of the new file or directory
    * Failure: -EINVALIDINODE, -EINVALIDNAME, -EINVALIDTYPE, -ENOTENOUGHSPACE.
-   * Failure modes: parentInodeNumber does not exist, or name is too long.
-   * If name already exists and is of the correct type, return success, but
-   * if the name already exists and is of the wrong type, return an error.
+   * Failure modes: parentInodeNumber does not exist or is not a directory, or
+   * name is too long. If name already exists and is of the correct type,
+   * return success, but if the name already exists and is of the wrong type,
+   * return an error.
    */
   int create(int parentInodeNumber, int type, std::string name);
 
@@ -93,7 +94,7 @@ class LocalFileSystem {
    * already exists.
    *
    * Success: number of bytes written
-   * Failure: -EINVALIDINODE, -EINVALIDSIZE, -EINVALIDTYPE, -ENOTENOUGHSPACE.
+   * Failure: -EINVALIDINODE, -EINVALIDSIZE, -EINVALIDTYPE.
    * Failure modes: invalid inodeNumber, invalid size, not a regular file
    * (because you can't write to directories).
    */
@@ -119,11 +120,10 @@ class LocalFileSystem {
    * parentInodeNumber.
    *
    * Success: 0
-   * Failure: -EINVALIDINODE, -EDIRNOTEMPTY, -EINVALIDNAME, -ENOTENOUGHSPACE,
-   *          -EUNLINKNOTALLOWED
-   * Failure modes: parentInodeNumber does not exist, directory is NOT
-   * empty, or the name is invalid. Note that the name not existing is NOT
-   * a failure by our definition. You can't unlink '.' or '..'
+   * Failure: -EINVALIDINODE, -EDIRNOTEMPTY, -EINVALIDNAME, -EUNLINKNOTALLOWED
+   * Failure modes: parentInodeNumber does not exist or isn't a directory,
+   * directory is NOT empty, or the name is invalid. Note that the name not
+   * existing is NOT a failure by our definition. You can't unlink '.' or '..'
    */
   int unlink(int parentInodeNumber, std::string name);
   
@@ -134,14 +134,6 @@ class LocalFileSystem {
    * of trying to identify individual disk blocks and accessing only these.
    */
   void readSuperBlock(super_t *super);
-
-  /**
-   * numDataBytesNeeded is converted to blocks and added to numDataBlocksNeeded
-   * Having two separate arguments for data helps for operations that write
-   * new data to two separate entities. If you don't need a value
-   * you can set the number needed to 0.
-   */
-  bool diskHasSpace(super_t *super, int numInodesNeeded, int numDataBytesNeeded, int numDataBlocksNeeded=0);
 
   // Helper functions, you should read/write the entire inode and bitmap regions
   void readInodeBitmap(super_t *super, unsigned char *inodeBitmap);
