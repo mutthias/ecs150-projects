@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <assert.h>
+#include <cstring>
 
 #include "LocalFileSystem.h"
 #include "ufs.h"
@@ -14,7 +15,9 @@ LocalFileSystem::LocalFileSystem(Disk *disk) {
 }
 
 void LocalFileSystem::readSuperBlock(super_t *super) {
-
+  char buffer[UFS_BLOCK_SIZE];
+  disk->readBlock(0, buffer);
+  memcpy(super, buffer, sizeof(super_t));
 }
 
 int LocalFileSystem::lookup(int parentInodeNumber, string name) {
