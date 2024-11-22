@@ -11,12 +11,12 @@
 
 using namespace std;
 
-/*
-  Use this function with std::sort for directory entries
+
+  // Use this function with std::sort for directory entries
 bool compareByName(const dir_ent_t& a, const dir_ent_t& b) {
     return std::strcmp(a.name, b.name) < 0;
 }
-*/
+
 
 int main(int argc, char *argv[]) {
   if (argc != 3) {
@@ -27,11 +27,11 @@ int main(int argc, char *argv[]) {
   }
 
   // parse command line arguments
-  /*
+  
   Disk *disk = new Disk(argv[1], UFS_BLOCK_SIZE);
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   string directory = string(argv[2]);
-  */
+  
   
   return 0;
 }

@@ -62,6 +62,15 @@ void LocalFileSystem::writeInodeRegion(super_t *super, inode_t *inodes) {
 }
 
 int LocalFileSystem::lookup(int parentInodeNumber, string name) {
+  inode_t inode;
+  if (stat(parentInodeNumber, &inode) != 0) {
+    return -ENOTFOUND;
+  } 
+  if (inode.type != UFS_DIRECTORY) {
+    return -EINVALIDINODE;
+  }
+  
+  
   return 0;
 }
 
@@ -88,6 +97,7 @@ int LocalFileSystem::read(int inodeNumber, void *buffer, int size) {
   
   inode_t inodeTable[super.num_inodes];
   inode_t inode = inodeTable[inodeNumber];
+
   int blockNum = inode.direct[0];
 
   if (size <= 0 || size > inode.size) {
