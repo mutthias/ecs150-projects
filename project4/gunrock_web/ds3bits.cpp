@@ -22,13 +22,14 @@ int main(int argc, char *argv[]) {
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   
   super_t super;
+  fileSystem->readSuperBlock(&super);
+
   int inode_bytes = super.num_inodes / 8;
   int data_bytes = super.num_data / 8;
   unsigned char inode_buffer[inode_bytes];
   unsigned char data_buffer[data_bytes];
   
   // Super stats
-  fileSystem->readSuperBlock(&super);
   std::cout << "Super" << std::endl;
   std::cout << "inode_region_addr " << super.inode_region_addr << std::endl;
   std::cout << "inode_region_len " << super.inode_region_len << std::endl;
@@ -44,6 +45,7 @@ int main(int argc, char *argv[]) {
   for (int idx = 0; idx < inode_bytes; idx++) {
     cout << (unsigned int) inode_buffer[idx] << " ";
   }
+  std::cout << std::endl;
   std::cout << std::endl;
 
   // Data stats
