@@ -33,12 +33,13 @@ int main(int argc, char *argv[]) {
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   string directory = string(argv[2]);
 
-  inode_t inode;
   int local_inum = UFS_ROOT_DIRECTORY_INODE_NUMBER;
-  std::vector<std::string> dirs;
-  std::stringstream s(directory);
+  inode_t inode;
   std::string temp;
-
+  std::stringstream s(directory);
+  std::vector<std::string> dirs;
+  std::vector<dir_ent_t> files_in_dir;
+  
   if (directory == "/") {
     dirs = {};
   } else {
@@ -63,10 +64,8 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  std::vector<dir_ent_t> files_in_dir;
-
   if (inode.type == UFS_REGULAR_FILE) {
-    std::cout << local_inum << " " << dirs.back() << std::endl;
+    std::cout << local_inum << "\t" << dirs.back() << std::endl;
   } else {
     int blocks = inode.size / UFS_BLOCK_SIZE;
     if ((inode.size % UFS_BLOCK_SIZE) != 0) {
@@ -86,7 +85,7 @@ int main(int argc, char *argv[]) {
     std::sort(files_in_dir.begin(), files_in_dir.end(), compareByName);
 
     for (size_t idx = 0; idx < files_in_dir.size(); idx++) {
-      std::cout << files_in_dir[idx].inum << " " << files_in_dir[idx].name << std::endl;
+      std::cout << files_in_dir[idx].inum << "\t" << files_in_dir[idx].name << std::endl;
     }
   }
   
