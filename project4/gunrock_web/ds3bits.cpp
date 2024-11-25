@@ -17,7 +17,6 @@ int main(int argc, char *argv[]) {
   }
 
   // Parse command line arguments
-  
   Disk *disk = new Disk(argv[1], UFS_BLOCK_SIZE);
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   

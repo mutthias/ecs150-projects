@@ -155,6 +155,7 @@ int LocalFileSystem::create(int parentInodeNumber, int type, string name) {
 }
 
 int LocalFileSystem::write(int inodeNumber, const void *buffer, int size) {
+  
   return 0;
 }
 
