@@ -155,7 +155,24 @@ int LocalFileSystem::create(int parentInodeNumber, int type, string name) {
 }
 
 int LocalFileSystem::write(int inodeNumber, const void *buffer, int size) {
+  inode_t inode;
+  super_t super;
+  readSuperBlock(&super);
+
+  if (inodeNumber < 0 || inodeNumber > super.num_inodes) {
+    return -EINVALIDINODE;
+  } else if (size > MAX_FILE_SIZE || size <= 0) {
+    return -ENOTENOUGHSPACE;
+  } 
+  inode_t inodeTable[super.num_inodes];
+  readInodeRegion(&super, inodeTable);
+  inode = inodeTable[inodeNumber];
+
+  if (inode.type == UFS_DIRECTORY) {
+    return -EINVALIDTYPE;
+  }
   
+
   return 0;
 }
 
