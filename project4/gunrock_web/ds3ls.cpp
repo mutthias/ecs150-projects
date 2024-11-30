@@ -73,8 +73,8 @@ int main(int argc, char *argv[]) {
     }
     for (int idx = 0; idx < blocks; idx++) {
       if (inode.direct[idx] != 0) {
-        char local_buffer[UFS_BLOCK_SIZE];
-        disk->readBlock(inode.direct[idx], local_buffer);
+        char local_buffer[UFS_BLOCK_SIZE]; 
+        fileSystem->read(local_inum, local_buffer, inode.size);
         dir_ent_t *file_list = reinterpret_cast<dir_ent_t *>(local_buffer);
         
         for (size_t idx2 = 0; idx2 < inode.size / sizeof(dir_ent_t); idx2++) {
