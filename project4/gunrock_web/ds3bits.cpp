@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
   unsigned char inode_buffer[inode_bytes];
   unsigned char data_buffer[data_bytes];
   
-  // Super stats
+  // Super's stats
   std::cout << "Super" << std::endl;
   std::cout << "inode_region_addr " << super.inode_region_addr << std::endl;
   std::cout << "inode_region_len " << super.inode_region_len << std::endl;
@@ -38,20 +38,20 @@ int main(int argc, char *argv[]) {
   std::cout << "num_data " << super.num_data << std::endl;
   std::cout << std::endl;
 
-  // Inode stats
+  // Inode's stats
   fileSystem->readInodeBitmap(&super, inode_buffer);
   std::cout << "Inode bitmap" << std::endl;
-  for (int idx = 0; idx < inode_bytes; idx++) {
-    cout << (unsigned int) inode_buffer[idx] << " ";
+  for (int i = 0; i < inode_bytes; i++) {
+    std::cout << (unsigned int) inode_buffer[i] << " ";
   }
   std::cout << std::endl;
   std::cout << std::endl;
 
-  // Data stats
+  // Data's stats
   fileSystem->readDataBitmap(&super, data_buffer);
   std::cout << "Data bitmap" << std::endl;
-  for (int idx = 0; idx < data_bytes; idx++) {
-    cout << (unsigned int) data_buffer[idx] << " ";
+  for (int i = 0; i < data_bytes; i++) {
+    std::cout << (unsigned int) data_buffer[i] << " ";
   }
   std::cout << std::endl;
   

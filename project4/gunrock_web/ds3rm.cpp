@@ -23,8 +23,9 @@ int main(int argc, char *argv[]) {
   int parentInode = stoi(argv[2]);
   string entryName = string(argv[3]);
   
-  if (fileSystem->unlink(parentInode, entryName) != 0) {
-    cerr << "Error unable to remove entry (look up the write string)" << endl;
+  // From lecture sample
+  if (fileSystem->unlink(parentInode, entryName) < 0) {
+    std::cerr << "Error removing entry" << std::endl;
     return 1;
   }
 

@@ -24,7 +24,11 @@ int main(int argc, char *argv[]) {
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   int inodeNumber = stoi(argv[2]);
   
+
+  char buffer[UFS_BLOCK_SIZE];
+  int bytes_left = 0;
   inode_t inode;
+  
   if (fileSystem->stat(inodeNumber, &inode) < 0) {
     std::cerr << "Error reading file" << std::endl;
     return 1;
@@ -35,26 +39,24 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  char buffer[UFS_BLOCK_SIZE];
-  int bytes_left = 0;
   int blocks = inode.size / UFS_BLOCK_SIZE;
   if ((inode.size % UFS_BLOCK_SIZE) != 0) {
     blocks += 1;
   }
 
   std::cout << "File blocks" << std::endl;
-  for (int idx = 0; idx < blocks; idx++) {
-    if (inode.direct[idx] != 0) {
-      std::cout << inode.direct[idx] << std::endl;
+  for (int i = 0; i < blocks; i++) {
+    if (inode.direct[i] != 0) {
+      std::cout << inode.direct[i] << std::endl;
     }
   }
   std::cout << std::endl;
 
   std::cout << "File data" << std::endl;
-  for (int idx = 0; idx < blocks; idx++) {
-    if (inode.direct[idx] != 0) {
+  for (int i = 0; i < blocks; i++) {
+    if (inode.direct[i] != 0) {
       int data = std::min(inode.size - bytes_left, UFS_BLOCK_SIZE);
-      disk->readBlock(inode.direct[idx], buffer);
+      disk->readBlock(inode.direct[i], buffer);
       write(STDOUT_FILENO, buffer, data);
       bytes_left += data;
     }

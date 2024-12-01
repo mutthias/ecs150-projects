@@ -33,15 +33,15 @@ int main(int argc, char *argv[]) {
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   string directory = string(argv[2]);
 
-  int local_inum = UFS_ROOT_DIRECTORY_INODE_NUMBER;
+  int local_inum = UFS_ROOT_DIRECTORY_INODE_NUMBER; // Default to root for "/" case
   inode_t inode;
   std::string temp;
   std::stringstream s(directory);
   std::vector<std::string> dirs;
   std::vector<dir_ent_t> files_in_dir;
   
-  if (directory == "/") {
-    dirs = {};
+  if (directory == "/") { // nada, we're at the root
+    dirs = {}; 
   } else {
     while (std::getline(s, temp, '/')) {
       if (temp.size()) {
@@ -50,9 +50,10 @@ int main(int argc, char *argv[]) {
     }
   }
  
-  for (size_t idx = 0; idx < dirs.size(); idx++) {
-    // std::cout << "lookup " << dirs[idx] << " and " << local_inum << std::endl;
-    local_inum = fileSystem->lookup(local_inum, dirs[idx]);
+  for (size_t N = 0; N < dirs.size(); N++) {
+    // std::cout << "lookup " << dirs[N] << " and " << local_inum << std::endl;
+    local_inum = fileSystem->lookup(local_inum, dirs[N]);
+    
     if (local_inum < 0) {
       std::cerr << "Directory not found" << std::endl;
       return 1;
@@ -71,21 +72,22 @@ int main(int argc, char *argv[]) {
     if ((inode.size % UFS_BLOCK_SIZE) != 0) {
       blocks += 1;
     }
-    for (int idx = 0; idx < blocks; idx++) {
-      if (inode.direct[idx] != 0) {
+
+    for (int i = 0; i < blocks; i++) {
+      if (inode.direct[i] != 0) {
         char local_buffer[UFS_BLOCK_SIZE]; 
         fileSystem->read(local_inum, local_buffer, inode.size);
         dir_ent_t *file_list = reinterpret_cast<dir_ent_t *>(local_buffer);
         
-        for (size_t idx2 = 0; idx2 < inode.size / sizeof(dir_ent_t); idx2++) {
-          files_in_dir.push_back(file_list[idx2]);
+        for (size_t N = 0; N < inode.size / sizeof(dir_ent_t); N++) {
+          files_in_dir.push_back(file_list[N]);
         }
       }
     }
     std::sort(files_in_dir.begin(), files_in_dir.end(), compareByName);
 
-    for (size_t idx = 0; idx < files_in_dir.size(); idx++) {
-      std::cout << files_in_dir[idx].inum << "\t" << files_in_dir[idx].name << std::endl;
+    for (size_t N = 0; N < files_in_dir.size(); N++) {
+      std::cout << files_in_dir[N].inum << "\t" << files_in_dir[N].name << std::endl;
     }
   }
   

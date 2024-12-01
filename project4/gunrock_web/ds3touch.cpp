@@ -17,12 +17,19 @@ int main(int argc, char *argv[]) {
   }
 
   // Parse command line arguments
-  /*
+
   Disk *disk = new Disk(argv[1], UFS_BLOCK_SIZE);
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   int parentInode = stoi(argv[2]);
   string fileName = string(argv[3]);
-  */
+
+  //**************
+  inode_t inode;
+  fileSystem->stat(parentInode, &inode);
+
+  if (fileSystem->create(parentInode, UFS_REGULAR_FILE, fileName) < 0) {
+    std::cerr << "Error creating file (ds3touch)" << std::endl;
+  }
   
   return 0;
 }
