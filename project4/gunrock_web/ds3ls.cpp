@@ -40,9 +40,7 @@ int main(int argc, char *argv[]) {
   std::vector<std::string> dirs;
   std::vector<dir_ent_t> files_in_dir;
   
-  if (directory == "/") { // nada, we're at the root
-    dirs = {}; 
-  } else {
+  if (directory != "/") { 
     while (std::getline(s, temp, '/')) {
       if (temp.size()) {
         dirs.push_back(temp);
@@ -77,15 +75,17 @@ int main(int argc, char *argv[]) {
       if (inode.direct[i] != 0) {
         char local_buffer[UFS_BLOCK_SIZE]; 
         fileSystem->read(local_inum, local_buffer, inode.size);
-        dir_ent_t *file_list = reinterpret_cast<dir_ent_t *>(local_buffer);
         
         for (size_t N = 0; N < inode.size / sizeof(dir_ent_t); N++) {
-          files_in_dir.push_back(file_list[N]);
+          dir_ent_t entry;
+          std::memcpy(&entry, &local_buffer[N * sizeof(dir_ent_t)], sizeof(dir_ent_t));
+          files_in_dir.push_back(entry);
+  
         }
       }
     }
     std::sort(files_in_dir.begin(), files_in_dir.end(), compareByName);
-
+    // std::cout << files_in_dir.size() << endl;
     for (size_t N = 0; N < files_in_dir.size(); N++) {
       std::cout << files_in_dir[N].inum << "\t" << files_in_dir[N].name << std::endl;
     }

@@ -24,11 +24,10 @@ int main(int argc, char *argv[]) {
   string fileName = string(argv[3]);
 
   //**************
-  inode_t inode;
-  fileSystem->stat(parentInode, &inode);
 
   if (fileSystem->create(parentInode, UFS_REGULAR_FILE, fileName) < 0) {
-    std::cerr << "Error creating file (ds3touch)" << std::endl;
+    std::cerr << "Error creating file" << std::endl;
+    return 1;
   }
   
   return 0;

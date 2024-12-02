@@ -22,12 +22,19 @@ int main(int argc, char *argv[]) {
   }
 
   // Parse command line arguments
-  /*
   Disk *disk = new Disk(argv[1], UFS_BLOCK_SIZE);
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   string srcFile = string(argv[2]);
   int dstInode = stoi(argv[3]);
-  */
+
+  // *****
+
+  char buffer[UFS_BLOCK_SIZE];
+  if (fileSystem->write(dstInode, buffer, MAX_FILE_SIZE) < 0) {
+    std::cerr << "Could not write to dst_file" << std::endl;
+    return 1;
+  }
+  
   
   return 0;
 }
