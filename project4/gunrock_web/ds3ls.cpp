@@ -72,6 +72,7 @@ int main(int argc, char *argv[]) {
     }
 
     for (int i = 0; i < blocks; i++) {
+      // cout << "dir: " << inode.direct[i] << endl;
       if (inode.direct[i] != 0) {
         char local_buffer[UFS_BLOCK_SIZE]; 
         fileSystem->read(local_inum, local_buffer, inode.size);
@@ -80,12 +81,11 @@ int main(int argc, char *argv[]) {
           dir_ent_t entry;
           std::memcpy(&entry, &local_buffer[N * sizeof(dir_ent_t)], sizeof(dir_ent_t));
           files_in_dir.push_back(entry);
-  
         }
       }
     }
+
     std::sort(files_in_dir.begin(), files_in_dir.end(), compareByName);
-    // std::cout << files_in_dir.size() << endl;
     for (size_t N = 0; N < files_in_dir.size(); N++) {
       std::cout << files_in_dir[N].inum << "\t" << files_in_dir[N].name << std::endl;
     }
