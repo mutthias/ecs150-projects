@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cstring>
 #include <sstream>
+#include <set>
 
 #include "StringUtils.h"
 #include "LocalFileSystem.h"
@@ -33,7 +34,8 @@ int main(int argc, char *argv[]) {
   LocalFileSystem *fileSystem = new LocalFileSystem(disk);
   string directory = string(argv[2]);
 
-  int local_inum = UFS_ROOT_DIRECTORY_INODE_NUMBER; // Default to root for "/" case
+  // Default to root for "/" case
+  int local_inum = UFS_ROOT_DIRECTORY_INODE_NUMBER; 
   inode_t inode;
   std::string temp;
   std::stringstream s(directory);
@@ -70,24 +72,41 @@ int main(int argc, char *argv[]) {
     if ((inode.size % UFS_BLOCK_SIZE) != 0) {
       blocks += 1;
     }
-
-    for (int i = 0; i < blocks; i++) {
-      // cout << "dir: " << inode.direct[i] << endl;
-      if (inode.direct[i] != 0) {
-        char local_buffer[UFS_BLOCK_SIZE]; 
-        fileSystem->read(local_inum, local_buffer, inode.size);
+    int size = inode.size;
+    for (int i = 0; i < blocks; i++) {   
+      if (inode.direct[0] != 0) {
+        char local_buffer[UFS_BLOCK_SIZE * blocks];
+        int bytes_read = fileSystem->read(local_inum, local_buffer, size);
+        if (bytes_read < 0) {
+          std::cerr << "Directory not found" << std::endl;
+          return 1;
+        }
+        size -= bytes_read;
         
         for (size_t N = 0; N < inode.size / sizeof(dir_ent_t); N++) {
           dir_ent_t entry;
           std::memcpy(&entry, &local_buffer[N * sizeof(dir_ent_t)], sizeof(dir_ent_t));
-          files_in_dir.push_back(entry);
+          if (entry.name[0] != '\0') {
+            files_in_dir.push_back(entry);
+          }
         }
       }
     }
 
     std::sort(files_in_dir.begin(), files_in_dir.end(), compareByName);
+    std::set<int> inums;
+    if (!files_in_dir.size()) {
+      std::cerr << "Directory not found" << std::endl;
+      return 1;
+    }
     for (size_t N = 0; N < files_in_dir.size(); N++) {
-      std::cout << files_in_dir[N].inum << "\t" << files_in_dir[N].name << std::endl;
+      std::string s = files_in_dir[N].name;
+      if (s == ".." || s == ".") {
+        std::cout << files_in_dir[N].inum << "\t" << files_in_dir[N].name << std::endl;
+      } else if (inums.find(files_in_dir[N].inum) == inums.end()) {
+        std::cout << files_in_dir[N].inum << "\t" << files_in_dir[N].name << std::endl;
+        inums.insert(files_in_dir[N].inum);
+      }
     }
   }
   
