@@ -305,13 +305,16 @@ int LocalFileSystem::unlink(int parentInodeNumber, string name) {
   inode_t inodeTable[super.num_inodes];
   readInodeRegion(&super, inodeTable);
 
+  if (parent_inum > super.num_inodes) {
+    return -EINVALIDINODE;
+  }
   inode = inodeTable[parentInodeNumber];
   inode_from_lookup = inodeTable[parent_inum];
 
   if (inode.type != UFS_DIRECTORY) {
     return -EINVALIDTYPE;
   } else if (parent_inum < 0) {
-    return -ENOTFOUND;
+    return 0;
   } else if (inode_from_lookup.type == UFS_DIRECTORY && (long unsigned int)inode_from_lookup.size > 2 * sizeof(dir_ent_t)) {
     return -EDIRNOTEMPTY;
   }

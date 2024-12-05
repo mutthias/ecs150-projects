@@ -1,1 +1,1 @@
-./ds3touch tests/disk_images/a.img -1 c.txt
+./ds3rm tests/disk_images/b.img 2 c.txfsdfasd
