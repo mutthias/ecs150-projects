@@ -247,7 +247,10 @@ int LocalFileSystem::write(int inodeNumber, const void *buffer, int size) {
   unsigned char data_buffer[super.num_data / 8];
   inode_t inode;
   inode_t inodeTable[super.num_inodes];
-  int bytes_left = 1;
+  int bytes_left = -1;
+  int parent_inum = stat(inodeNumber, &inode);
+  // cout << parent_inum << endl;
+  // cout << inode.type << endl;
 
   // int blocks = size / UFS_BLOCK_SIZE;
   // if ((size % UFS_BLOCK_SIZE) != 0) {
@@ -258,14 +261,16 @@ int LocalFileSystem::write(int inodeNumber, const void *buffer, int size) {
     return -EINVALIDINODE;
   } else if (size > MAX_FILE_SIZE || size <= 0) {
     return -EINVALIDSIZE;
-  } 
-
-  readInodeRegion(&super, inodeTable);
-  inode = inodeTable[inodeNumber];
+  } else if (parent_inum < 0) {
+    return -EINVALIDINODE;
+  }
 
   if (inode.type == UFS_DIRECTORY) {
     return -EINVALIDTYPE;
   }
+
+  readInodeRegion(&super, inodeTable);
+  // inode = inodeTable[inodeNumber];
 
   readDataBitmap(&super, data_buffer);
   //const char *block_buffer = static_cast<const char*>(buffer);
@@ -305,19 +310,26 @@ int LocalFileSystem::unlink(int parentInodeNumber, string name) {
   inode_t inodeTable[super.num_inodes];
   readInodeRegion(&super, inodeTable);
 
-  if (parent_inum > super.num_inodes) {
+  if (parent_inum >= super.num_inodes) {
     return -EINVALIDINODE;
   }
-  inode = inodeTable[parentInodeNumber];
-  inode_from_lookup = inodeTable[parent_inum];
+  
+  inode = inodeTable[parentInodeNumber]; 
 
   if (inode.type != UFS_DIRECTORY) {
     return -EINVALIDTYPE;
   } else if (parent_inum < 0) {
     return 0;
-  } else if (inode_from_lookup.type == UFS_DIRECTORY && (long unsigned int)inode_from_lookup.size > 2 * sizeof(dir_ent_t)) {
+  } 
+  
+  inode_from_lookup = inodeTable[parent_inum];
+  
+  if (inode_from_lookup.type == UFS_DIRECTORY && (long unsigned int)inode_from_lookup.size > 2 * sizeof(dir_ent_t)) {
     return -EDIRNOTEMPTY;
+  } else if (parent_inum > 0 && inode_from_lookup.size == 0) {
+    return -EINVALIDINODE;
   }
+
 
   unsigned char inode_bitmap[super.num_inodes / 8];
   readInodeBitmap(&super, inode_bitmap);
