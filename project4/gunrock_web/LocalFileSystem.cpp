@@ -313,24 +313,31 @@ int LocalFileSystem::unlink(int parentInodeNumber, string name) {
   if (parent_inum >= super.num_inodes) {
     return -EINVALIDINODE;
   }
-  
-  inode = inodeTable[parentInodeNumber]; 
 
+  inode = inodeTable[parentInodeNumber]; 
+  // cout << parent_inum << " " << inode.size << endl;
   if (inode.type != UFS_DIRECTORY) {
     return -EINVALIDTYPE;
-  } else if (parent_inum < 0) {
-    return 0;
   } 
   
   inode_from_lookup = inodeTable[parent_inum];
+  // cout << inode_from_lookup.size << endl;
+
   
   if (inode_from_lookup.type == UFS_DIRECTORY && (long unsigned int)inode_from_lookup.size > 2 * sizeof(dir_ent_t)) {
     return -EDIRNOTEMPTY;
-  } else if (parent_inum > 0 && inode_from_lookup.size == 0) {
+  } else if ((long unsigned int)inode_from_lookup.size == 2 * sizeof(dir_ent_t) && parent_inum < 0) {
+    return -EINVALIDINODE;
+  } else if (parent_inum < 0) {
+    return 0;
+  } else if (parent_inum > 0 && inode.size == 0) {
     return -EINVALIDINODE;
   }
 
-
+  if (inode_from_lookup.size == 0 && inode_from_lookup.type == UFS_DIRECTORY) {
+    return -EINVALIDINODE;
+  }
+  
   unsigned char inode_bitmap[super.num_inodes / 8];
   readInodeBitmap(&super, inode_bitmap);
 
@@ -379,9 +386,9 @@ int LocalFileSystem::unlink(int parentInodeNumber, string name) {
   
   for (int i = 0; i < DIRECT_PTRS; i++) {
     if (inode_from_lookup.direct[i] > 0) {
-      int blockIndex = inode_from_lookup.direct[i] - super.data_region_addr;
-      if (blockIndex >= 0 && blockIndex < super.num_data) {
-        data_bitmap[blockIndex / 8] &= ~(1 << (blockIndex % 8));
+      int cur_block = inode_from_lookup.direct[i] - super.data_region_addr;
+      if (cur_block >= 0 && cur_block < super.num_data) {
+        data_bitmap[cur_block / 8] &= ~(1 << (cur_block % 8));
         inode_from_lookup.direct[i] = 0; 
       }
     }

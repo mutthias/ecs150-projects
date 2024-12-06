@@ -29,12 +29,11 @@ int main(int argc, char *argv[]) {
 
   // *****
 
-  char buffer[UFS_BLOCK_SIZE];
+  char buffer[MAX_FILE_SIZE];
   if (fileSystem->write(dstInode, buffer, MAX_FILE_SIZE) < 0) {
     std::cerr << "Could not write to dst_file" << std::endl;
     return 1;
   }
-  
   
   return 0;
 }
